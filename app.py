@@ -8,7 +8,7 @@ def index():
     return {'hello': 'world'}
 
 
-@app.route('/info')
+@app.route('/info', cors=True)
 def info():
     return {
         'name': 'python-destroyer',
@@ -16,7 +16,7 @@ def info():
     }
 
 
-@app.route('/command', methods=['POST'])
+@app.route('/command', methods=['POST'], cors=True)
 def command():
     return {
         'command': 'fire'
