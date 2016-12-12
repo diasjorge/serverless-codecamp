@@ -108,6 +108,22 @@ class Tank(object):
             'y': self.you['y'] + next_movement['y']
         }
 
+    def soon_outside_of_map(self, next_position):
+        now_x = self.you['x']
+        now_y = self.you['y']
+        next_x = next_position['x']
+        next_y = next_position['y']
+        min_x = 3
+        max_x = self._map['mapWidth'] - 3
+        min_y = 3
+        max_y = self._map['mapHeight'] - 3
+        return (
+            (next_x < now_x and next_x < min_x) or
+            (next_y < now_y and next_y < min_y) or
+            (next_x > now_x and next_x > max_x) or
+            (next_y > now_y and next_y > max_y)
+        )
+
     def outside_of_map(self, position):
         return position['x'] < 0 or position['x'] >= self._map['mapWidth'] or \
             position['y'] < 0 or position['y'] >= self._map['mapHeight']
@@ -126,7 +142,7 @@ class Tank(object):
         return obj['x'] == position['x'] and obj['y'] == position['y']
 
     def next_move(self):
-        if self.outside_of_map(self.next_position):
+        if self.soon_outside_of_map(self.next_position):
             return 'turn-left'
         if self.wall_at(self.next_position):
             return 'fire'
