@@ -1,0 +1,5 @@
+{
+  "lambda_arn": "arn:aws:lambda:eu-central-1:687577343946:function:serverless-codecamp", 
+  "app_name": "serverless-codecamp", 
+  "stage": "dev"
+}
