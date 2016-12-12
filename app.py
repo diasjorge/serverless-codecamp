@@ -59,6 +59,11 @@ class Tank(object):
         return self._map['enemies']
 
     @property
+    def closest_enemy(self):
+        # TODO: calculate closest enemy
+        return self.enemies[0]
+
+    @property
     def is_any_enemies(self):
         return len(self.enemies) > 0
 
@@ -126,10 +131,6 @@ class Tank(object):
             (next_y > now_y and next_y > max_y)
         )
 
-    def outside_of_map(self, position):
-        return position['x'] < 0 or position['x'] >= self._map['mapWidth'] or \
-            position['y'] < 0 or position['y'] >= self._map['mapHeight']
-
     def wall_at(self, position):
         return any(self.object_at(wall, position) for wall in self._map['walls'])
 
@@ -150,6 +151,126 @@ class Tank(object):
             return 'fire'
         if self.dead_at(self.next_position):
             return 'turn-left'
-        if self.is_any_enemies and self.can_fire_on_any_enemy:
-            return 'fire'
+        if self.is_any_enemies:
+            if self.can_fire_on_any_enemy:
+                return 'fire'
+            else:
+                return self.get_chase_move()
         return 'forward'
+
+    def get_chase_move(self):
+        min_x = 0
+        max_x = self._map['mapWidth']
+        min_y = 0
+        max_y = self._map['mapHeight']
+        you_x = self.you['x']
+        you_y = self.you['y']
+        you_direction = self.you['direction']
+        enemy_x = self.closest_enemy['x']
+        enemy_y = self.closest_enemy['y']
+        left_positions = [{'x': x, 'y': you_y} for x in range(min_x, you_x)]
+        right_positions = [{'x': x, 'y': you_y} for x in range(you_x + 1, max_x)]
+        top_positions = [{'x': you_x, 'y': y} for y in range(min_y, you_y)]
+        bottom_positions = [{'x': you_x, 'y': y} for y in range(you_y + 1, max_y)]
+        print('left positions:', left_positions)
+        print('right positions:', right_positions)
+        print('top positions:', top_positions)
+        print('bottom positions:', bottom_positions)
+        enemy_future_positions = []
+        if self.closest_enemy['direction'] == 'left':
+            enemy_future_positions = [{'x': x, 'y': enemy_y} for x in range(min_x, enemy_x)]
+        elif self.closest_enemy['direction'] == 'left':
+            enemy_future_positions = [{'x': x, 'y': enemy_y} for x in range(you_x + 1, max_x)]
+        elif self.closest_enemy['direction'] == 'left':
+            enemy_future_positions = [{'x': enemy_x, 'y': y} for y in range(min_y, enemy_y)]
+        elif self.closest_enemy['direction'] == 'left':
+            enemy_future_positions = [{'x': enemy_x, 'y': y} for y in range(enemy_y + 1, max_y)]
+        print('enemy future positions:', enemy_future_positions)
+        left_intersections = [
+            left_position
+            if (
+                left_position['x'] == enemy_future_position['x'] and
+                left_position['y'] == enemy_future_position['y']
+            )
+            for left_position in left_positions
+            for enemy_future_position in enemy_future_positions
+        ]
+        right_intersections = [
+            right_position
+            if (
+                right_position['x'] == enemy_future_position['x'] and
+                right_position['y'] == enemy_future_position['y']
+            )
+            for right_position in right_positions
+            for enemy_future_position in enemy_future_positions
+        ]
+        top_intersections = [
+            top_position
+            if (
+                top_position['x'] == enemy_future_position['x'] and
+                top_position['y'] == enemy_future_position['y']
+            )
+            for top_position in top_positions
+            for enemy_future_position in enemy_future_positions
+        ]
+        bottom_intersections = [
+            bottom_position
+            if (
+                bottom_position['x'] == enemy_future_position['x'] and
+                bottom_position['y'] == enemy_future_position['y']
+            )
+            for bottom_position in bottom_positions
+            for enemy_future_position in enemy_future_positions
+        ]
+        if any(left_intersections):
+            left_intersection = left_intersections[0]
+            if you_direction == 'left':
+                if you_x - left_intersection['x'] <= self.weapon_range:
+                    return 'pass'
+                else:
+                    return 'forward'
+            if you_direction == 'top':
+                return 'turn-left'
+            if you_direction == 'right':
+                return 'turn-left'
+            if you_direction == 'bottom':
+                return 'turn-right'
+        if any(right_intersections):
+            right_intersection = right_intersections[0]
+            if you_direction == 'right':
+                if right_intersection['x'] - you_x <= self.weapon_range:
+                    return 'pass'
+                else:
+                    return 'forward'
+            if you_direction == 'top':
+                return 'turn-right'
+            if you_direction == 'left':
+                return 'turn-left'
+            if you_direction == 'bottom':
+                return 'turn-left'
+        if any(top_intersections):
+            top_intersection = top_intersections[0]
+            if you_direction == 'left':
+                if you_y - top_intersection['y'] <= self.weapon_range:
+                    return 'pass'
+                else:
+                    return 'forward'
+            if you_direction == 'left':
+                return 'turn-right'
+            if you_direction == 'right':
+                return 'turn-left'
+            if you_direction == 'bottom':
+                return 'turn-left'
+        if any(bottom_intersections):
+            bottom_intersection = bottom_intersections[0]
+            if you_direction == 'bottom':
+                if bottom_intersection['y'] - you_y <= self.weapon_range:
+                    return 'pass'
+                else:
+                    return 'forward'
+            if you_direction == 'top':
+                return 'turn-left'
+            if you_direction == 'right':
+                return 'turn-right'
+            if you_direction == 'left':
+                return 'turn-left'
