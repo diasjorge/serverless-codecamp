@@ -46,8 +46,48 @@ class Tank(object):
         self._map = map
 
     @property
+    def weapon_range(self):
+        return self._map['weaponRange']
+
+    @property
     def you(self):
         return self._map['you']
+
+    @property
+    def enemies(self):
+        return self._map['enemies']
+
+    @property
+    def is_any_enemies(self):
+        return len(self.enemies) > 0
+
+    @property
+    def can_fire_on_any_enemy(self):
+        return any([self.can_fire_on_enemy(enemy) for enemy in self.enemies])
+
+    @property
+    def can_fire_on_enemy(self, enemy):
+        if self.you['direction'] == 'top':
+            return (
+                enemy['position']['x'] == self.you['position']['x'] and
+                enemy['position']['y'] >= self.you['position']['y'] - self.weaponRange
+            )
+        if self.you['direction'] == 'bottom':
+            return (
+                enemy['position']['x'] == self.you['position']['x'] and
+                enemy['position']['y'] <= self.you['position']['y'] + self.weaponRange
+            )
+        if self.you['direction'] == 'left':
+            return (
+                enemy['position']['x'] >= self.you['position']['x'] - self.weaponRange and
+                enemy['position']['y'] == self.you['position']['y']
+            )
+        if self.you['direction'] == 'right':
+            return (
+                enemy['position']['x'] <= self.you['position']['x'] + self.weaponRange and
+                enemy['position']['y'] == self.you['position']['y']
+            )
+        raise Exception('Invalid direction for your tank')
 
     @property
     def next_position(self):
@@ -71,9 +111,10 @@ class Tank(object):
         return False
 
     def next_move(self):
+        if self.is_any_enemies and self.can_fire_on_any_enemy:
+            return 'fire'
         if self.outside_of_map(self.next_position):
             return 'turn-left'
-        elif self.wall_at(self.next_position):
+        if self.wall_at(self.next_position):
             return 'fire'
-        else:
-            return 'forward'
+        return 'forward'
