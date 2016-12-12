@@ -65,29 +65,39 @@ class Tank(object):
     def can_fire_on_any_enemy(self):
         return any([self.can_fire_on_enemy(enemy) for enemy in self.enemies])
 
-    @property
     def can_fire_on_enemy(self, enemy):
+        return enemy['strength'] > 0 and self.is_enemy_on_range(enemy)
+
+    def is_enemy_on_range(self, enemy):
+        if not self.is_enemy_visible(enemy):
+            return False
+
         if self.you['direction'] == 'top':
             return (
-                enemy['position']['x'] == self.you['position']['x'] and
-                enemy['position']['y'] >= self.you['position']['y'] - self.weaponRange
+                enemy['x'] == self.you['x'] and
+                enemy['y'] >= self.you['y'] - self.weapon_range
             )
         if self.you['direction'] == 'bottom':
             return (
-                enemy['position']['x'] == self.you['position']['x'] and
-                enemy['position']['y'] <= self.you['position']['y'] + self.weaponRange
+                enemy['x'] == self.you['x'] and
+                enemy['y'] <= self.you['y'] + self.weapon_range
             )
         if self.you['direction'] == 'left':
             return (
-                enemy['position']['x'] >= self.you['position']['x'] - self.weaponRange and
-                enemy['position']['y'] == self.you['position']['y']
+                enemy['x'] >= self.you['x'] - self.weapon_range and
+                enemy['y'] == self.you['y']
             )
         if self.you['direction'] == 'right':
             return (
-                enemy['position']['x'] <= self.you['position']['x'] + self.weaponRange and
-                enemy['position']['y'] == self.you['position']['y']
+                enemy['x'] <= self.you['x'] + self.weapon_range and
+                enemy['y'] == self.you['y']
             )
-        raise Exception('Invalid direction for your tank')
+
+    def is_enemy_visible(self, enemy):
+        if enemy.get('x', None):
+            return True
+        return False
+
 
     @property
     def next_position(self):
@@ -103,18 +113,25 @@ class Tank(object):
             position['y'] < 0 or position['y'] >= self._map['mapHeight']
 
     def wall_at(self, position):
-        walls = self._map['walls']
-        for wall in walls:
-            if wall['x'] == position['x'] and wall['y'] == position['y']:
+        return any(self.object_at(wall, position) for wall in self._map['walls'])
+
+    def dead_at(self, position):
+        for enemy in self._map['enemies']:
+            if self.is_enemy_visible(enemy) and self.object_at(enemy, position) and enemy['strength'] == 0:
                 return True
 
         return False
 
+    def object_at(self, obj, position):
+        return obj['x'] == position['x'] and obj['y'] == position['y']
+
     def next_move(self):
-        if self.is_any_enemies and self.can_fire_on_any_enemy:
-            return 'fire'
         if self.outside_of_map(self.next_position):
             return 'turn-left'
         if self.wall_at(self.next_position):
+            return 'fire'
+        if self.dead_at(self.next_position):
+            return 'turn-left'
+        if self.is_any_enemies and self.can_fire_on_any_enemy:
             return 'fire'
         return 'forward'
