@@ -60,12 +60,11 @@ class Tank(object):
 
     @property
     def closest_enemy(self):
-        # TODO: calculate closest enemy
         return self.enemies[0]
 
     @property
     def is_any_enemies(self):
-        return len(self.enemies) > 0
+        return any([self.is_enemy_visible(enemy) for enemy in self.enemies])
 
     @property
     def can_fire_on_any_enemy(self):
@@ -155,7 +154,9 @@ class Tank(object):
             if self.can_fire_on_any_enemy:
                 return 'fire'
             else:
-                return self.get_chase_move()
+                chase_move = self.get_chase_move()
+                print("CHASEMOVE", chase_move)
+                return chase_move
         return 'forward'
 
     def get_chase_move(self):
@@ -188,40 +189,45 @@ class Tank(object):
         print('enemy future positions:', enemy_future_positions)
         left_intersections = [
             left_position
+            for left_position in left_positions
+            for enemy_future_position in enemy_future_positions
             if (
                 left_position['x'] == enemy_future_position['x'] and
                 left_position['y'] == enemy_future_position['y']
             )
-            for left_position in left_positions
-            for enemy_future_position in enemy_future_positions
         ]
         right_intersections = [
             right_position
+            for right_position in right_positions
+            for enemy_future_position in enemy_future_positions
             if (
                 right_position['x'] == enemy_future_position['x'] and
                 right_position['y'] == enemy_future_position['y']
             )
-            for right_position in right_positions
-            for enemy_future_position in enemy_future_positions
         ]
         top_intersections = [
             top_position
+            for top_position in top_positions
+            for enemy_future_position in enemy_future_positions
             if (
                 top_position['x'] == enemy_future_position['x'] and
                 top_position['y'] == enemy_future_position['y']
             )
-            for top_position in top_positions
-            for enemy_future_position in enemy_future_positions
         ]
         bottom_intersections = [
             bottom_position
+            for bottom_position in bottom_positions
+            for enemy_future_position in enemy_future_positions
             if (
                 bottom_position['x'] == enemy_future_position['x'] and
                 bottom_position['y'] == enemy_future_position['y']
             )
-            for bottom_position in bottom_positions
-            for enemy_future_position in enemy_future_positions
         ]
+        print("LEFT I", left_intersections)
+        print("RIGHT I", right_intersections)
+        print("TOP I", top_intersections)
+        print("BOTTOM I", bottom_intersections)
+
         if any(left_intersections):
             left_intersection = left_intersections[0]
             if you_direction == 'left':
@@ -274,3 +280,4 @@ class Tank(object):
                 return 'turn-right'
             if you_direction == 'left':
                 return 'turn-left'
+        return 'forward'
