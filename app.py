@@ -1,4 +1,5 @@
 from chalice import Chalice
+import random
 
 app = Chalice(app_name='serverless-codecamp')
 app.debug = True
@@ -109,14 +110,15 @@ class Tank(object):
         }
 
     def soon_outside_of_map(self, next_position):
+        boundary = random.randint(1, 3)
         now_x = self.you['x']
         now_y = self.you['y']
         next_x = next_position['x']
         next_y = next_position['y']
-        min_x = 3
-        max_x = self._map['mapWidth'] - 3
-        min_y = 3
-        max_y = self._map['mapHeight'] - 3
+        min_x = boundary
+        max_x = self._map['mapWidth'] - boundary
+        min_y = boundary
+        max_y = self._map['mapHeight'] - boundary
         return (
             (next_x < now_x and next_x < min_x) or
             (next_y < now_y and next_y < min_y) or
