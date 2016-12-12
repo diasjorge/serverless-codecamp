@@ -8,6 +8,19 @@ def index():
     return {'hello': 'world'}
 
 
+@app.route('/info')
+def info():
+    return {
+        'name': 'python-destroyer',
+        'owner': 'python-haters'
+    }
+
+
+@app.route('/command', methods=['POST'])
+def command():
+    return {
+        'command': 'fire'
+    }
 # The view function above will return {"hello": "world"}
 # whenver you make an HTTP GET request to '/'.
 #
